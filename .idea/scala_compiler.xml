@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ScalaCompilerConfiguration">
-    <profile name="Maven 1" modules="play_json_learn,play_json_test">
-      <option name="experimental" value="true" />
-    </profile>
-  </component>
-</project>
