@@ -1,7 +1,8 @@
-package com.learn.scala.json.conver.conver
+package com.learn.scala.json.conver.readers
 
 /**
  * @author ymy  2020/3/15
+ *         -----------嵌套类实现Reads，能将json字符串转换类
  *         通过使用复杂读取和自定义验证，读取model
  */
 object ValidationReadsDemo2 extends App {
@@ -13,9 +14,9 @@ object ValidationReadsDemo2 extends App {
 
   case class Place(name: String, location: Location, residents: Seq[Resident])
 
-  import play.api.libs.json._
-  import play.api.libs.json.Reads._
   import play.api.libs.functional.syntax._
+  import play.api.libs.json.Reads._
+  import play.api.libs.json._
 
   implicit val locationReads: Reads[Location] = (
     (JsPath \ "lat").read[Double](min(-90.0) keepAnd max(90.0)) and
@@ -61,4 +62,3 @@ object ValidationReadsDemo2 extends App {
 
 
 }
-

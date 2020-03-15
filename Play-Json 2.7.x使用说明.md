@@ -1,4 +1,11 @@
-# Play-Json 使用说明
+# Play-Json 2.7.x使用说明
+
+主要对Play-Json的2.7.x版本的官网说明文档进行解释说明
+
+<https://www.playframework.com/documentation/2.7.x/ScalaJson>
+
+
+
 ## 1、基本介绍
 官网地址: https://index.scala-lang.org/playframework/play-json/play-json/2.5.10?target=_2.11
 Play JSON是功能强大的Scala JSON库，最初由Play团队开发。它使用Jackson进行Json的解析(Java生态圈中有很多处理JSON和XML格式化的类库,Jackson是其中比较著名的一个)，并且没有Play依赖。
@@ -471,13 +478,11 @@ val residentResult: JsResult[Resident] = (json \ "residents")(1).validate[Reside
 
 
 
-## 7、Json 结合Http
+## 7、Json 结合Http(待补充)
 
 Play通过结合使用HTTP API和JSON库，支持内容类型为JSON的HTTP请求和响应。
 
 下面将通过设计一个简单的RESTful web服务来演示必要的概念，以获取实体列表并接受创建新实体的例子。该服务将对所有数据使用JSON内容类型。
-
-
 
 
 
@@ -805,9 +810,199 @@ implicit val locationFormat: Format[Location] = (
 
 ## 9、Json自动映射
 
-如果JSON直接映射到类，可以直接只用这样您就不必手动编写Reads[t]、Writes[t]或Format[t]
+如果JSON直接映射到类，可以直接只用宏，不用手动编写Reads[t]、Writes[t]或Format[t]
 
+```scala
+case class Resident(name: String, age: Int, role: Option[String])
 ```
 
+### 9.1自动映射Reads[T]
+
+根据类的数据和结构自动创建Reads
+
+```scala
+import play.api.libs.json._
+implicit val residentReads = Json.reads[Resident]
 ```
+
+编译时，宏将检查给定的类并注入以下代码，就像手动编写的一样：
+
+```scala
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
+
+implicit val residentReads = (
+  (__ \ "name").read[String] and
+  (__ \ "age").read[Int] and
+  (__ \ "role").readNullable[String]
+)(Resident)
+```
+
+这是在编译时完成的，因此不会丢失任何类型安全性或性能。
+
+自动将JSON解析为case类的完整示例如下：
+
+```scala
+import play.api.libs.json._
+
+implicit val residentReads = Json.reads[Resident]
+
+// In a request, a JsValue is likely to come from `request.body.asJson`
+// or just `request.body` if using the `Action(parse.json)` body parser
+val jsonString: JsValue = Json.parse(
+  """{
+  "name" : "Fiver",
+  "age" : 4
+}"""
+)
+
+val residentFromJson: JsResult[Resident] =
+  Json.fromJson[Resident](jsonString)
+
+residentFromJson match {
+  case JsSuccess(r: Resident, path: JsPath) =>
+    println("Name: " + r.name)
+
+  case e @ JsError(_) =>
+    println("Errors: " + JsError.toJson(e).toString())
+}
+```
+
+### 9.2 自动映射Writes[T]
+
+对于Writes[T]或Format[T]，存在类似的宏：
+
+```scala
+import play.api.libs.json._
+
+implicit val residentWrites = Json.writes[Resident]
+
+//执行case类到JSON的自动转换
+val resident = Resident(name = "Fiver", age = 4, role = None)
+val residentJson: JsValue = Json.toJson(resident)
+```
+
+### 9.3  自动映射Format[T]
+
+```scala
+import play.api.libs.json._
+implicit val residentFormat = Json.format[Resident]
+
+  //将case class 类转换为jsValue
+  val residentJson: JsValue = Json.toJson(resident)
+  println(residentJson)
+
+  val resident = Resident(name = "Fiver", age = 4, role = None)
+
+  //将case class 类转换为jsValue
+  val residentJson: JsValue = Json.toJson(resident)
+  println(residentJson)
+  //returns {"name":"Fiver","age":4}
+
+  //jsValue转换为case class
+  val jsonString: JsValue = Json.parse(s"""{ "name" : "Fiver", "age" : 4}""")
+  val resident2 = jsonString.as[Resident]
+  //returns Resident(Fiver,4,None)
+```
+
+### 9.4 自动映射value classes[未理解]  
+
+还支持[value classes](https://docs.scala-lang.org/overviews/core/value-classes.html)的自动转换，以下给定基于String类型的value
+
+```scala
+final class IdText(val value: String) extends AnyVal
+
+import play.api.libs.json._
+implicit val idTextReads = Json.valueReads[IdText]
+implicit val idTextWrites = Json.valueWrites[IdText]
+implicit val idTextFormat = Json.valueFormat[IdText]
+```
+
+注意：要能够从request.body.asJson访问JSON，请求必须具有application/JSON的内容类型头。您可以使用“tolerantJson”主体解析器来放松此约束。（HTTP）
+
+### 9.5 必要条件
+
+要使用宏完成自动转换，用于满足以下要求的类和特征。
+
+* 它必须有一个有`apply`和`unapply`方法的伴生对象。
+* `unapply`的返回类型必须匹配`apply`方法的参数类型。
+* `apply`方法的参数名必须与JSON中所需的属性名相同
+
+case class自动满足这些要求，对于其他的自定义类或接口，必须实现以上条件。
+
+### 9.6 类或者接口自动映射 
+
+一个特征也可以被支持，当且仅当它是密封的并且子类型符合前面的要求时：
+
+```scala
+sealed trait Role
+case object Admin extends Role
+class Contributor(val organization: String) extends Role {
+  override def equals(obj: Any): Boolean = obj match {
+    case other: Contributor if obj != null => this.organization == other.organization
+    case _ => false
+  }
+}
+object Contributor {
+  def apply(organization: String): Contributor = new Contributor(organization)
+  def unapply(contributor: Contributor): Option[(String)] = Some(contributor.organization)
+}
+```
+
+密封族实例的JSON表示形式需包括一个discriminator字段，该字段指定有效的子类型（文本字段，默认名称为`_type`）。
+
+```scala
+  //密封族实例的JSON表示形式包括一个discriminator字段，该字段指定有效的子类型（文本字段，默认名称为_type）。
+  //每个JSON对象都用 _type 标记，,
+  //值要用子类型的完全限定名表示
+  val adminJson = Json.parse(
+    """{ "_type": "com.learn.scala.json.conver.autoMap.AutoMapTraitDemo.Admin" }""")
+
+  val contributorJson = Json.parse(
+    """{
+       "_type":"com.learn.scala.json.conver.autoMap.AutoMapTraitDemo.Contributor",
+    "organization":"Foo"
+  }""")
+```
+
+
+
+然后宏是能够产生`Reads[T]`，`OWrites[T]`或`OFormat[T]`。
+
+```scala
+import play.api.libs.json._
+
+//首先为每个子类型Admin和Contributor提供实例：
+implicit val adminFormat = OFormat[Admin.type](
+  Reads[Admin.type] {
+    case JsObject(_) => JsSuccess(Admin)
+    case _ => JsError("Empty object expected")
+  },
+  OWrites[Admin.type] { _ => Json.obj() })
+
+implicit val contributorFormat = Json.format[Contributor]
+
+//最终能够为密封的Role生成Format
+implicit val roleFormat: OFormat[Role] = Json.format[Role]
+```
+
+```scala
+  //将jsvalue转换为对象
+  val admin = adminJson.as[Admin.type]
+  //returns Admin
+
+  //将jsValue转换为类
+  val contributor = contributorJson.as[Contributor]
+  //returns Contributor(Foo)
+
+  //将类转换为JsValue
+  val contributorJsonValue = Json.toJson(contributorJson)
+  //{"_type":"com.learn.scala.json.conver.autoMap.AutoMapTraitDemo.Contributor","organization":"Foo"}
+```
+
+
+
+## 10、 超过22个元素的case class处理
+
+
 

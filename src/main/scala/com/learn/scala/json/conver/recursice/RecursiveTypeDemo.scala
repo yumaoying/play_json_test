@@ -1,13 +1,12 @@
-package com.learn.scala.json.conver.conver
+package com.learn.scala.json.conver.recursice
 
-import java.io.Writer
-
+import play.api.libs.functional.syntax.unlift
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 /**
  * @author ymy  2020/3/15
- *         递归类型
+ *         递归类型的转换
  *
  */
 object RecursiveTypeDemo extends App {

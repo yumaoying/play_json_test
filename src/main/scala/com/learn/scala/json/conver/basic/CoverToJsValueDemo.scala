@@ -1,13 +1,17 @@
-package com.learn.scala.json.conver.conver
+package com.learn.scala.json.conver.basic
 
+import com.learn.scala.json.conver.writes.OwnClassToJsValueDemoCombinator.json
 import play.api.libs.json._
-
 
 /**
  * @author ymy 2020/3/15
- *         转换为JsValue
- *
+ *         基本类型-----转换jsValue
+ * 1.Json.parse
+ * 2.Json.obj
+ * 3.Json.arr
+ * 4.Json.toJson -----实现Writes
  */
+
 object CoverToJsValueDemo extends App {
 
   //1.使用字符串转换
@@ -74,5 +78,3 @@ object CoverToJsValueDemo extends App {
   val jsonArrayOfStrings: JsValue = Json.toJson(List("Fiver", "Bigwig"))
 
 }
-
-

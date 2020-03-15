@@ -1,10 +1,10 @@
-package com.learn.scala.json.conver.conver
+package com.learn.scala.json.conver.writes
 
 import play.api.libs.json._
 
 /**
  * @author ymy  2020/3/15
- *         自定义类转换为JsValue
+ *         实现Writes------自定义类转换为JsValue(简单实现obj)
  *         对于自定义类型要转换成JsValue，必须在一定范围内隐式定义Writes
  */
 object OwnClassToJsValueDemo extends App {

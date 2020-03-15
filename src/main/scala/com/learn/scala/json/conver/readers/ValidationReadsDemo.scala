@@ -1,9 +1,11 @@
-import play.api.libs.json._
-import play.api.libs.json.Reads._
-import play.api.libs.functional.syntax._
+package com.learn.scala.json.conver.readers
 
+import play.api.libs.json.Reads.{max, min}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 /**
  * @author ymy  2020/3/15
+ *         ---单个类实现Reads，能将json字符串转换类
  *         通过使用复杂读取和自定义验证，读取model
  */
 object ValidationReadsDemo extends App {
@@ -36,18 +38,3 @@ object ValidationReadsDemo extends App {
   println(json2.validate[Location])
   //JsError(List((/long,List(JsonValidationError(List(error.max),WrappedArray(180.0))))))
 }
-
-
-//分解Reads方法
-//1.combine Reads (使用别名__双下划线替换JsPath)
-//val locationReadsBuilder: FunctionalBuilder[Reads]#CanBuild2[Double, Double] =
-//(__ \ "lat").read[Double] and
-//  (__ \ "long").read[Double]
-////2.combinator读取对象
-////第二次调用CanBuildX的apply方法，使用一个函数将单个值转换为model
-//implicit val locationReads2 = locationReadsBuilder.apply(Location.apply _)
-////3.完整写法
-//implicit val locationRead3: Reads[Location] = (
-//  (JsPath \ "lat").read[Double] and
-//    (JsPath \ "long").read[Double]
-//  ) (Location.apply _)

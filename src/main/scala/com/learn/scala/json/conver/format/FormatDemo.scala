@@ -1,4 +1,4 @@
-package com.learn.scala.json.conver.conver.format
+package com.learn.scala.json.conver.format
 
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -6,7 +6,8 @@ import play.api.libs.json.Reads._
 
 /**
  * @author ymy  2020/3/15
- *         可以定义Format使用同一类型的Reads和Writes
+ *         可以定义Format使用同一类型的Reads和Writes组合
+ *         -----实现format可以实现类和json字符串的相互转换
  */
 object FormatDemo extends App {
 

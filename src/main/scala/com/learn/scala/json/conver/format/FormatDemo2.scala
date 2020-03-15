@@ -1,12 +1,10 @@
-package com.learn.scala.json.conver.conver.format
-
+package com.learn.scala.json.conver.format
 
 /**
  * @author ymy  2020/3/15
  *         可以定义Format使用组合器
  *         如果读写是对称的（在实际应用中可能不是这样,对称即要求jsValue中的属性与model的属性名称一一对应），
- *         可以直接从组合器定义格式：
- *
+ *  -----实现format可以实现类和json字符串的相互转换
  */
 object FormatDemo2 extends App {
 
@@ -33,6 +31,4 @@ object FormatDemo2 extends App {
   val location2 = jsValue.as[Location]
   println("jsValue转换为实体类:" + location2)
   //jsValue转换为实体类:Location(30.0,20.0)
-
-jsValue.validate
 }
