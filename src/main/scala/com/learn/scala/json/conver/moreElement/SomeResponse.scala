@@ -36,7 +36,6 @@ case class SomeResponse(var compositeKey: String,
                         var other: String)
 
 object SomeResponse {
-  //  implicit val format = Json.format[SomeResponse]
 
   val someResponseFirstFormat: OFormat[(String, String, String, String, String, String, String, Long, String, String, String)] =
     ((__ \ "compositeKey").format[String] and
